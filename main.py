@@ -1,6 +1,7 @@
 import os
 import datetime
 import asyncio
+app = lambda environ, start_response: start_response('200 OK', [('Content-Type', 'text/plain')]) or [b"OK"]
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 from google.oauth2.service_account import Credentials
