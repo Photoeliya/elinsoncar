@@ -1,5 +1,6 @@
 import os
 import datetime
+import asyncio
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 from google.oauth2.service_account import Credentials
@@ -57,6 +58,12 @@ async def book(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ שגיאה. נא לכתוב: /book [א/ב] [שעת התחלה] [שעת סיום]\nלדוגמה: /book א 14:00 16:00")
 
 def main():
+    # תיקון קריטי עבור גרסאות פייתון חדשות בשרתי ענן
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        asyncio.set_event_loop(asyncio.new_event_loop())
+
     application = Application.builder().token(TELEGRAM_TOKEN).build()
     application.add_handler(CommandHandler("status", status))
     application.add_handler(CommandHandler("book", book))
@@ -64,5 +71,5 @@ def main():
     print("הבוט פועל ברקע...")
     application.run_polling()
 
-if __name__ == '__main__':
+if _name_ == '_main_':
     main()
