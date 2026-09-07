@@ -1,14 +1,21 @@
 import os
 import datetime
 import asyncio
-app = lambda environ, start_response: start_response('200 OK', [('Content-Type', 'text/plain')]) or [b"OK"]
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
+from flask import Flask
 
-# --- הגדרות משתנים ---
-TELEGRAM_TOKEN ="8917955835:AAEgIOOTErn3UVvhexGv6N8lTsxAT-4D2og"
+# --- הגדרות רשת עבור Render החינמי ---
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot is running!", 200
+
+# --- הגדרות משתנים שלכם ---
+TELEGRAM_TOKEN = "8917955835:AAEgIOOTErn3UVvhexGv6N8lTsxAT-4D2og"
 CALENDAR_ID_A = "f3ade93a27e88897affe2cc50e8ebee8eedc53b8a28d6a3558caf573fb0ae735@group.calendar.google.com"
 CALENDAR_ID_B = CALENDAR_ID_A
 # חיבור מאובטח ליומן גוגל
@@ -58,8 +65,8 @@ async def book(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text("❌ שגיאה. נא לכתוב: /book [א/ב] [שעת התחלה] [שעת סיום]\nלדוגמה: /book א 14:00 16:00")
 
-def main():
-    # תיקון קריטי עבור גרסאות פייתון חדשות בשרתי ענן
+# ריצה אסינכרונית ברקע
+async def run_bot():
     try:
         asyncio.get_running_loop()
     except RuntimeError:
@@ -69,8 +76,14 @@ def main():
     application.add_handler(CommandHandler("status", status))
     application.add_handler(CommandHandler("book", book))
     
-    print("הבוט פועל ברקע...")
-    application.run_polling()
+    await application.initialize()
+    await application.start()
+    await application.updater.start_polling()
+
+# הפעלה משולבת
+import threading
+threading.Thread(target=lambda: asyncio.run(run_bot())).start()
 
 if __name__ == '__main__':
-    main()
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
